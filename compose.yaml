@@ -1,0 +1,35 @@
+﻿services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: myapp-sql
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=Password*
+    ports:
+      - "1434:1433"
+    volumes:
+      - sql_data:/var/opt/mssql
+    networks:
+      - myappapi-network
+
+  webapi:
+    build:
+      context: .
+      dockerfile: src/MyAppApi.Api/Dockerfile
+    container_name: myapp-api
+    depends_on:
+      - sqlserver
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=MyAppDb;User Id=sa;Password=Password*;TrustServerCertificate=True;
+    ports:
+      - "8080:8080"
+    networks:
+      - myappapi-network
+
+volumes:
+  sql_data:
+
+networks:
+  myappapi-network:
+    driver: bridge
